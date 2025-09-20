@@ -3,10 +3,8 @@ import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import fitz
-import numpy as np
 from PIL import Image
 from pathlib import Path
-import cv2
 
 import sys
 FORMAT = '%(asctime)-s %(name)s %(funcName)s %(lineno)d %(levelname)-8s %(message)s'
@@ -14,17 +12,7 @@ logging.basicConfig(format=FORMAT, stream=sys.stderr, level=logging.INFO)
 
 LOGGER = logging.getLogger(__name__)
 
-def fitz_doc_to_image(doc, dpi=200) -> dict:
-    """Convert fitz.Document to image, Then convert the image to numpy array.
-
-    Args:
-        doc (_type_): pymudoc page
-        dpi (int, optional): reset the dpi of dpi. Defaults to 200.
-
-    Returns:
-        dict:  {'img': numpy array, 'width': width, 'height': height }
-    """
-
+def fitz_doc_to_image(doc, dpi=200) -> Image:
     mat = fitz.Matrix(dpi / 72, dpi / 72)
     pm = doc.get_pixmap(matrix=mat, alpha=False)
 
@@ -32,25 +20,16 @@ def fitz_doc_to_image(doc, dpi=200) -> dict:
     if pm.width > 4500 or pm.height > 4500:
         pm = doc.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
 
-    img = Image.frombytes('RGB', (pm.width, pm.height), pm.samples)
-    img = np.array(img)
+    return Image.frombytes('RGB', (pm.width, pm.height), pm.samples)
 
-    img_dict = {'img': img, 'width': pm.width, 'height': pm.height}
-
-    return img_dict
 
 def doc_2_img(pdf_path, dpi, pics_dir, index):
     # 此处之所以重新读取pdf，是因为doc无法序列化，故而无法在多进程中传递。
     docs = fitz.open(pdf_path)
     doc = docs[index]
-    img = fitz_doc_to_image(doc, dpi=dpi)['img']
-    ret, buf = cv2.imencode('.png', img)  # 也可以改为.png等格式
-    if not ret:
-        raise ValueError("图像编码失败")
-
     img_path = str(pics_dir / f'{index:04d}.png')
-    # 使用numpy的tofile方法写入文件
-    buf.tofile(img_path)
+    img = fitz_doc_to_image(doc, dpi=dpi)
+    img.save(img_path)
     LOGGER.info('written %s', img_path)
 
 
@@ -137,8 +116,8 @@ if __name__ == '__main__':
     #                      r'D:\学习\python\Python asyncio 并发编程 (马修·福勒)_bk.pdf',
     #                      r'D:\学习\python\Python asyncio 并发编程 (马修·福勒).json')
 
-    # pdf_2_pics(r'D:\学习\python\Python asyncio 并发编程 (马修·福勒).pdf', max_workers=8)
+    pdf_2_pics(r'D:\学习\python\Python asyncio 并发编程 (马修·福勒) - 副本.pdf', override=True, max_workers=8)
 
-    save_bookmarks(r'D:\学习\营养学\中国居民膳食指南（2022）.pdf',
-                   r'D:\学习\营养学\中国居民膳食指南（2022）_test书签.pdf',
-                   title_json_path=r'D:\学习\营养学\中国居民膳食指南（2022）.json')
+    # save_bookmarks(r'D:\学习\营养学\中国居民膳食指南（2022）.pdf',
+    #                r'D:\学习\营养学\中国居民膳食指南（2022）_test书签.pdf',
+    #                title_json_path=r'D:\学习\营养学\中国居民膳食指南（2022）.json')
