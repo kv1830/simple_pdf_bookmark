@@ -1,0 +1,8 @@
+langchain==0.3.27
+langchain_openai==0.3.28
+PyYAML==6.0.2
+pydantic==2.11.7
+numpy==1.26.4
+opencv-python==4.11.0.86
+PyMuPDF==1.26.4
+Pillow==11.3.0

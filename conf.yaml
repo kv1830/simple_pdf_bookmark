@@ -1,0 +1,27 @@
+bookmark:
+  save_tmp_json: true # true则会在pdf所在目录下生成一个同名的json文件，里面会实时更新生成的目录
+  contents_page_thresh: 6 # 如果一页提取出的目录超过6个，则认为可能是目录页，交由llm_model判断是否是目录页，是则丢弃
+  contents_judge_by_llm: false # 当触发contents_page_thresh时，如果此项为true，则由llm_model判断，否则直接判断是目录页。
+  max_title_grade: 3 # 只提取1，2，3级标题
+  need_resize: true # 为true则会使用max_image_tokens配置，为false则不resize图片。但是要注意对应模型的最大token数，另外对于提取标题来说，不需要太高清，能看清字就行。
+  max_image_tokens: 1280 # 调qwen-vl模型时，28乘28像素为1个token，这里配置的意思就是一张图最大为1280*28*28像素，超过则为resize。调模型时消耗1280token
+pdf_2_pics: # pdf转图片的文件夹名称即为pdf的文件名（不含后缀），图片名为0000.png，0001.png，...
+  max_workers: 8 # pdf转图片的进程数
+  override: false # 如果已经存在图片文件夹，override为true则会重新生成图片，否则不重新生成
+  exist_ok: true # 如果已经存在图片文件夹 exist_ok为false则会抛异常
+vl_model: # 多模态大模型，提取标题
+  openai_api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
+  model_name: qwen-vl-max-latest
+  openai_api_key: sk-xxxxx
+  timeout: 120
+  cache_file_name: qwen_vl_cache_no # 缓存文件名，缓存文件夹为项目根目录下的cache目录
+  streaming: false # 流式输出，没有强制要求流式输出的，可以指定为false
+  temperature: 0
+llm_model: # 语言大模型，判断vl_model返回的结果是不是"目录页"
+  openai_api_base: https://api.deepseek.com/
+  model_name: deepseek-chat
+  openai_api_key: sk-xxxxx
+  timeout: 120
+  cache_file_name: deepseek_chat_cache # 缓存文件名，缓存文件夹为项目根目录下的cache目录
+  streaming: false # 流式输出，没有强制要求流式输出的，可以指定为false
+  temperature: 0
